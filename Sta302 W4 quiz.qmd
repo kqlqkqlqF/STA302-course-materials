@@ -1,0 +1,92 @@
+---
+title: "sta302_week4"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(car)
+```
+
+```{r}
+#### Question 2 ####
+
+# Set a seed for reproduce the same result
+set.seed(42)
+
+# Simulate the actual heights of friends
+actual_heights <- rnorm(20, mean = 160, sd = 10)
+
+# Simulate measurement errors for each friend and each person (Edward, Hugo, Lucy)
+measurement_errors_edward <- rnorm(20, mean = 0, sd = 2)
+measurement_errors_hugo <- rnorm(20, mean = 0, sd = 3)
+measurement_errors_lucy <- rnorm(20, mean = 0, sd = 1)
+
+# Simulate measured heights for each person
+heights_edward <- actual_heights + measurement_errors_edward
+heights_hugo <- actual_heights + measurement_errors_hugo
+heights_lucy <- actual_heights + measurement_errors_lucy
+
+# Create a data frame to store the simulated data
+simulated_data <- data.frame(
+  actualHeights = actual_heights,
+  edwardHeights = heights_edward,
+  hugoHeights = heights_hugo,
+  lucyHeights = heights_lucy
+)
+
+# Show the simulated data
+print(simulated_data)
+
+# 1st Test: T-Test for Means
+t_test_edward <- t.test(heights_edward, actual_heights, paired = TRUE)
+t_test_hugo <- t.test(heights_hugo, actual_heights, paired = TRUE)
+t_test_lucy <- t.test(heights_lucy, actual_heights, paired = TRUE)
+
+#print the result of T-Test value
+cat("T-Test for Means (Edward): p-value =", t_test_edward$p.value, "\n")
+cat("T-Test for Means (Hugo): p-value =", t_test_hugo$p.value, "\n")
+cat("T-Test for Means (Lucy): p-value =", t_test_lucy$p.value, "\n")
+
+# 2nd test: Boxplot Visualization
+boxplot(list(heights_edward, heights_hugo, heights_lucy),
+        names = c("Edward", "Hugo", "Lucy"),
+        col = c("red", "blue", "green"),
+        main = "Boxplot of Measured Heights for Each Person",
+        ylab = "Height (cm)")
+
+# 3rd test: Correlation Coefficient
+correlation_edward <- cor(actual_heights, heights_edward)
+correlation_hugo <- cor(actual_heights, heights_hugo)
+correlation_lucy <- cor(actual_heights, heights_lucy)
+
+#print the result of corrlation coefficient
+cat("Correlation Coefficient (Edward):", correlation_edward, "\n")
+cat("Correlation Coefficient (Hugo):", correlation_hugo, "\n")
+cat("Correlation Coefficient (Lucy):", correlation_lucy, "\n")
+```
+
+```{r}
+####Question 4 ####
+# Create a data frame for ggplot
+ggplot_data <- data.frame(
+  Person = rep(c("Edward", "Hugo", "Lucy"), each = 20),
+  Heights = c(heights_edward, heights_hugo, heights_lucy)
+)
+
+#sgiw data repared for ggplot
+ggplot_data
+
+# Create a boxplot using ggplot2
+ggplot(ggplot_data, aes(x = Person, y = Heights, fill = Person)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Measured Heights by Each Person",
+       x = "Person",
+       y = "Height (cm)",
+       fill = "Person") +
+  theme_minimal()
+
+```
+
