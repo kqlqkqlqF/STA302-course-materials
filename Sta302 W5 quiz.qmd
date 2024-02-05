@@ -1,0 +1,93 @@
+---
+title: "sta302_week5"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(car)
+```
+
+```{r}
+#### Question 2  part one####
+
+# Set a seed for reproduce the same result
+set.seed(1)
+
+# Number of days
+days <- 100
+
+# Simulate data for each undergraduate
+matt <- rnorm(days, mean = 30, sd = 10)
+ash <- rnorm(days, mean = 30, sd = 10)
+jacki <- rnorm(days, mean = 25, sd = 8)
+rol <- rnorm(days, mean = 28, sd = 9)
+mike <- rnorm(days, mean = 27, sd = 8)
+
+# Create a positive correlation between the couple (Ash and Matt)
+couple_correlation <- 0.8
+couple_data <- MASS::mvrnorm(n = days, mu = c(30, 30), Sigma = matrix(c(10^2, 10^2 * couple_correlation, 10^2 * couple_correlation, 10^2), ncol = 2))
+
+ash <- couple_data[, 1]
+matt <- couple_data[, 2]
+
+# Combine data into a data frame
+reading_data <- data.frame(
+  Day = 1:days,
+  Matt = matt,
+  Ash = ash,
+  Jacki = jacki,
+  Rol = rol,
+  Mike = mike
+)
+
+# Display the first few rows of the simulated data
+head(reading_data)
+
+```
+```{r}
+####Generate tests for the data In question 2####
+#test one- ttest - to see weather there's significant difference between the pages read by matt and ash
+t_test_couple <- t.test(reading_data$Ash, reading_data$Matt, paired = TRUE)
+cat("T-Test for Couple's Reading Habits: p-value =", t_test_couple$p.value, "\n")
+
+#test two- anova test - to see if there's a significant difference  between the average number of pages they read
+anova_all <- aov(cbind(Matt, Ash, Jacki, Rol, Mike) ~ 1, data = reading_data)
+summary(anova_all)
+
+#test three- correlation - to see if there's significant difference between the number of page read by Jacki and Mike
+correlation_jacki_mike <- cor(reading_data$Jacki, reading_data$Mike)
+cat("Correlation between Jacki and Mike:", correlation_jacki_mike, "\n")
+
+#test four- mean test - to check if the average number read by Pol is the same with a specific number, here we take 25
+t_test_rol <- t.test(reading_data$Rol, mu = 25)
+cat("Mean Test for Rol's Reading Habits: p-value =", t_test_rol$p.value, "\n")
+
+#test five- mean test - to check the mean reading habits between Jacki and Rol
+t_test_jacki_rol <- t.test(reading_data$Jacki, reading_data$Rol)
+cat("Comparing Mean Reading Habits of Jacki and Rol: p-value =", t_test_jacki_rol$p.value, "\n")
+
+
+```
+
+```{r}
+####Question 4 ####
+# Create a data frame for ggplot
+# Create a line plot using ggplot2
+ggplot(reading_data, aes(x = Day)) +
+  geom_line(aes(y = Matt, color = "Matt"), size = 1) +
+  geom_line(aes(y = Ash, color = "Ash"), size = 1) +
+  geom_line(aes(y = Jacki, color = "Jacki"), size = 1) +
+  geom_line(aes(y = Rol, color = "Rol"), size = 1) +
+  geom_line(aes(y = Mike, color = "Mike"), size = 1) +
+  labs(
+    title = "Daily Reading Habits of Undergraduates",
+    x = "Day",
+    y = "Number of Pages Read",
+    color = "Undergraduate"
+  ) +
+  theme_minimal()
+```
+
