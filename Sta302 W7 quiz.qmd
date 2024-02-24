@@ -1,0 +1,166 @@
+---
+title: "sta302_week7"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(rstanarm)
+```
+
+```{r}
+#### Question 2  part one####
+
+# Set seed for reproducibility
+set.seed(1)
+
+# Simulate data
+num_buildings <- 2000  # Assume there are 2000 buildings in London, we want to simulate data for all of 2000 buildings
+
+# Simulate number of floors for each building
+num_floors <- round(rnorm(num_buildings, mean = 10, sd = 5))
+
+# Simulate year of construction, assume all buildings in London were constructed between 1600 and 2024
+year_construction <- sample(1600:2024, num_buildings, replace = TRUE)
+
+# Initialize vectors for architectural style
+architectural_style <- character(num_buildings)
+
+# Generate predictors associated with the count of number of floors
+footprint_size <- runif(num_buildings, min = 500, max = 5000)  # Random size of building footprint between 500 and 5000
+neighborhood <- sample(c("Central London", "Suburban", "Industrial"), num_buildings, replace = TRUE)  # Random neighborhood
+
+# Assign architectural styles based on year of construction
+for (i in 1:num_buildings) {
+  if (year_construction[i] >= 1600 && year_construction[i] <= 1750) {
+    architectural_style[i] <- "Baroque"
+  } else if (year_construction[i] >= 1800 && year_construction[i] <= 1900) {
+    architectural_style[i] <- "Victorian"
+  } else if (year_construction[i] >= 1901 && year_construction[i] <= 2024) {
+    architectural_style[i] <- "Modern"
+  } else {
+    architectural_style[i] <- "Other"
+  }
+}
+
+# Create a data frame
+building_data <- data.frame(
+  NumFloors = num_floors,
+  YearConstruction = year_construction,
+  FootprintSize = footprint_size,
+  ArchitecturalStyle = architectural_style,
+  Neighborhood = neighborhood
+)
+
+# Display the first few rows of the simulated data
+head(building_data)
+
+```
+
+
+```{r}
+####Generate tests for the data In question 2####
+# Test 1: Check if there are any missing values in the dataframe
+test_missing_values <- anyNA(building_data)
+
+# Test 2: Check if all values in the 'NumFloors' column are positive integers
+test_positive_integer_floors <- all(building_data$NumFloors > 0) && all(building_data$NumFloors == floor(building_data$NumFloors))
+
+# Test 3: Check if all values in the 'YearConstruction' column are within the range 1600 to 2024
+test_year_construction_range <- all(building_data$YearConstruction >= 1600) && all(building_data$YearConstruction <= 2024)
+
+# Test 4: Check if all values in the 'FootprintSize' column are within the range 500 to 5000
+test_footprint_size_range <- all(building_data$FootprintSize >= 500) && all(building_data$FootprintSize <= 5000)
+
+# Test 5: Check if all values in the 'ArchitecturalStyle' column belong to one of the categories: 'Baroque', 'Victorian', 'Modern', 'Other'
+test_architectural_style_categories <- all(building_data$ArchitecturalStyle %in% c("Baroque", "Victorian", "Modern", "Other"))
+
+# Test 6: Check if all values in the 'Neighborhood' column belong to one of the categories: 'Central London', 'Suburban', 'Industrial'
+test_neighborhood_categories <- all(building_data$Neighborhood %in% c("Central London", "Suburban", "Industrial"))
+
+# Test 7: Check if there are any negative values in the dataframe
+test_negative_values <- any(building_data < 0)
+
+# Test 8: Check if there are any duplicated rows in the dataframe
+test_duplicate_rows <- anyDuplicated(building_data)
+
+# Test 9: Check if all 'YearConstruction' values are integers
+test_integer_year_construction <- all(building_data$YearConstruction %% 1 == 0)
+
+# Test 10: Check if all 'NumFloors' values are numeric
+test_numeric_num_floors <- all(is.numeric(building_data$NumFloors))
+
+# Combine all tests into a list
+tests <- list(
+  TestMissingValues = test_missing_values,
+  TestPositiveIntegerFloors = test_positive_integer_floors,
+  TestYearConstructionRange = test_year_construction_range,
+  TestFootprintSizeRange = test_footprint_size_range,
+  TestArchitecturalStyleCategories = test_architectural_style_categories,
+  TestNeighborhoodCategories = test_neighborhood_categories,
+  TestNegativeValues = test_negative_values,
+  TestDuplicateRows = test_duplicate_rows,
+  TestIntegerYearConstruction = test_integer_year_construction,
+  TestNumericNumFloors = test_numeric_num_floors
+)
+
+# Display the results of the tests
+tests
+
+```
+
+```{r}
+#### Question 4 ####
+# Create scatter plot using ggplot2
+ggplot(building_data, aes(x = year_construction, y = num_floors)) +
+  geom_point() +
+  labs(x = "Year of Construction", y = "Number of Floors") +
+  ggtitle("Scatter Plot of Number of Floors vs Year of Construction")
+
+# Fit a linear regression model using rstanarm
+model <- stan_glm(num_floors ~ year_construction, data = building_data)
+
+# Check model summary
+summary(model)
+```
+
+```{r}
+#### QUestion 6 ####
+# Set seed for reproducibility
+set.seed(2)
+
+# Number of observations
+num_obs <- 1000
+
+# Simulate race (binary variable)
+race <- sample(c("White", "Black"), num_obs, replace = TRUE, prob = c(0.7, 0.3))
+
+# Simulate gender (binary variable)
+gender <- sample(c("Male", "Female"), num_obs, replace = TRUE)
+
+# Simulate vote preference (categorical variable)
+# The preference may depend on both race and gender
+vote_preference <- character(num_obs)
+for (i in 1:num_obs) {
+  if (race[i] == "White" && gender[i] == "Male") {
+    vote_preference[i] <- sample(c("Republican", "Democrat"), 1, prob = c(0.4, 0.6))
+  } else if (race[i] == "White" && gender[i] == "Female") {
+    vote_preference[i] <- sample(c("Republican", "Democrat"), 1, prob = c(0.3, 0.7))
+  } else if (race[i] == "Black" && gender[i] == "Male") {
+    vote_preference[i] <- sample(c("Republican", "Democrat"), 1, prob = c(0.2, 0.8))
+  } else {
+    vote_preference[i] <- sample(c("Republican", "Democrat"), 1, prob = c(0.1, 0.9))
+  }
+}
+
+# Create a data frame
+data <- data.frame(race, gender, vote_preference)
+
+# View the first few rows of the data
+head(data)
+
+```
+
+
