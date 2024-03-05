@@ -1,0 +1,138 @@
+---
+title: "sta302_week8"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(rstanarm)
+```
+
+```{r}
+#### Question 2  part one####
+
+# Set seed for reproducibility
+set.seed(1)
+
+# Generate synthetic data
+n <- 1000  # Number of observations
+
+# Generate age-group data
+age_group <- sample(1:5, n, replace = TRUE)
+
+# Generate age-group data with specific categories
+age_group <- sample(c("Teenager", "Young Adult", "Adult", "Middle-Aged", "Senior"), n, replace = TRUE)
+
+# Generate income group data
+income_group <- sample(c("Low", "Medium", "High"), n, replace = TRUE)
+
+# Generate highest education data
+education <- sample(c("High School", "Bachelor's", "Master's", "PhD"), n, replace = TRUE)
+
+# Generate support for political party data
+support <- sample(c("Yes", "No"), n, replace = TRUE)
+
+# Create a dataframe
+data <- data.frame(age_group, gender, income_group, education, support)
+
+# Display the first few rows of the dataframe
+head(data)
+
+```
+
+
+```{r}
+####Generate tests for the data In question 2####
+# Test for missing values
+test_missing <- any(is.na(data))
+
+# Test for unique values in each variable
+test_unique_values <- lapply(data, function(x) length(unique(x))) == nrow(data)
+
+# Test for balanced distribution of age groups
+test_age_balance <- table(data$age_group)
+
+# Test for balanced distribution of gender
+test_gender_balance <- table(data$gender)
+
+# Test for balanced distribution of income groups
+test_income_balance <- table(data$income_group)
+
+# Test for balanced distribution of education levels
+test_education_balance <- table(data$education)
+
+# Test for balanced distribution of political party support
+test_support_balance <- table(data$support)
+
+# Test for consistent data types
+test_data_types <- sapply(data, class)
+
+# Test for logical consistency in support and age group
+test_support_age_consistency <- table(data$support, data$age_group)
+
+# Test for logical consistency in support and education
+test_support_education_consistency <- table(data$support, data$education)
+
+# Display the results of the tests
+tests
+
+```
+
+```{r}
+#### Question 4 ####
+# Create scatter plot using ggplot2
+# Plot the relationship between age_group and support
+ggplot(data, aes(x = age_group, fill = support)) +
+  geom_bar(position = "fill") +
+  labs(title = "Support for Political Party by Age Group",
+       x = "Age Group",
+       y = "Proportion",
+       fill = "Support") +
+  facet_grid(income_group ~ education) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        strip.text = element_text(size = 8),                 # Adjust size of facet titles
+        strip.background = element_rect(fill = "lightgrey")) # Change background color of facet titles
+
+# Convert support variable to a binary factor
+data$support <- as.factor(data$support)
+
+# Build the model using rstanarm
+model <- stan_glm(support ~ age_group + income_group + education, data = data, family = binomial())
+
+
+# Print the summary of the model
+print(model)
+```
+
+```{r}
+#### QUestion 7 ####
+# Set seed for reproducibility
+set.seed(2)
+
+# Number of observations
+n <- 1000
+
+# Generate independent variables
+earth <- rnorm(n)
+fire <- rnorm(n)
+wind <- rnorm(n)
+water <- rnorm(n)
+
+# Generate dependent variable (heart) based on a linear relationship
+heart <- 2 * earth + 3 * fire - 1.5 * wind + 0.5 * water + rnorm(n)
+
+# Create a data frame
+data <- data.frame(earth, fire, wind, water, heart)
+
+# Fit linear regression model
+model <- lm(heart ~ earth + fire + wind + water, data = data)
+
+# Summary of the model
+summary(model)
+
+```
+
+
