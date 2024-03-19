@@ -1,0 +1,80 @@
+---
+title: "Mini essay 10"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(MASS)
+```
+
+
+```{r}
+#### Hypothetical data generation####
+
+# Generating hypothetical data
+set.seed(1)  # for reproducibility
+
+# Number of observations
+n <- 100
+
+# Response variable: Number of votes for Pat Buchanan
+votes_buchanan <- round(rnorm(n, mean = 3000, sd = 500))
+
+# Demographic variables
+income <- round(rnorm(n, mean = 50000, sd = 10000))
+education_level <- sample(1:5, n, replace = TRUE)  # 1 = High School, 5 = PhD
+ethnicity <- sample(c("White", "Black", "Hispanic", "Asian"), n, replace = TRUE)
+
+# Creating a data frame
+data <- data.frame(votes_buchanan, income, education_level, ethnicity)
+
+```
+
+
+```{r}
+#### Simple model buildup####
+# Fitting multiple regression model
+model <- lm(votes_buchanan ~ income + education_level + ethnicity, data = data)
+
+# Summary of the model
+summary(model)
+
+```
+```{r}
+#### Examine the model ####
+
+# Examine the structure of the data dataset
+str(data)
+
+# Fit a multiple regression model
+model <- lm(votes_buchanan ~ income + education_level + ethnicity, data = data)
+
+# Summary of the model
+summary(model)
+
+```
+
+# Model
+
+In our study, we created a make-believe situation to understand how people might vote, particularly focusing on predicting the number of votes for Pat Buchanan. The data we made up included things like income, education level, and ethnicity to see how they might affect voting. Using a multiple regression model, we tried to figure out if changes in income, education, or ethnic background could change how people vote. It's important to remember that our model is just a simplified version using made-up data. In real life, there are many other things that could affect how people vote. But our study gives us a starting point to think about how people's backgrounds might influence their voting choices.
+
+# Logistic Regression
+
+Logistic regression is like having a tool for predicting yes or no questions. But here, we're not asking if something is a yes or no; we're trying to predict the number of votes for Pat Buchanan. So, logistic regression isn't the right fit for our problem.
+
+# Poisson Regression
+
+Think of Poisson regression as your go-to when you're counting stuff, like how many times your favorite song plays on the radio in an hour. It's perfect for events that happen independently in a fixed interval. But here, we're dealing with votes, and Poisson regression assumes that the mean and variance of votes are the same. If there's a lot of variation in the number of votes, Poisson might not capture it all.
+
+# Negative Binomial
+
+Enter negative binomial regression, the hero of count data when things get a bit wild. It's like Poisson's cool cousin who can handle situations where the variance is way bigger than the mean. If there's a lot more variability in the number of votes than expected, negative binomial regression swoops in to save the day.
+
+# Summery
+
+In the end, it's like choosing between a basic tool (Poisson regression) and a more flexible one (negative binomial regression) that can handle unexpected twists and turns in the data. And since we're dealing with voting numbers, where surprises aren't uncommon, negative binomial regression seems like the way to go. But hey, let's take a closer look at the data first to be sure!
+
+
+
+
