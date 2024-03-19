@@ -7,6 +7,6 @@ None of the components of this work involved the use of LLMs.
 
 - `Sta302 W4 quiz.qmd` contains the answers for quiz on week 4.
 
-- `Sta302 Mini essay 11.qmd` contains the answer for tutorial 11.
+- `Sta302 Mini essay 10.qmd` contains the answer for tutorial 10.
 
 - etc.....
