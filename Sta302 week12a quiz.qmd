@@ -1,0 +1,153 @@
+---
+title: "sta302_week12_a"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(car)
+library(tibble)
+library(rstanarm)
+```
+
+```{r}
+#### Question 2 ####
+
+# Define predictor variables (e.g., demographics, healthcare access, lifestyle factors, environmental variables)
+# For simplicity, let's consider age, smoking rate, pollution level, and access to healthcare
+# Simulate predictor variables
+set.seed(1) # Set seed for reproducibility
+n_samples <- 1000
+age <- round(rnorm(n_samples, mean = 50, sd = 15))
+smoking_rate <- runif(n_samples, min = 0, max = 1)
+pollution_level <- rnorm(n_samples, mean = 50, sd = 10)
+access_to_healthcare <- runif(n_samples, min = 0, max = 1)
+
+# Simulate number of deaths attributed to cancer based on predictor variables
+# Define a function to simulate deaths
+simulate_deaths <- function(age, smoking_rate, pollution_level, access_to_healthcare) {
+  # Define coefficients for the predictors
+  age_coef <- 0.02
+  smoking_coef <- 0.5
+  pollution_coef <- 0.03
+  healthcare_coef <- -0.2
+  
+  # Simulate number of deaths using a linear combination of predictors
+  lambda <- exp(age * age_coef + smoking_rate * smoking_coef + pollution_level * pollution_coef + access_to_healthcare * healthcare_coef)
+  
+  # Simulate deaths from a Poisson distribution
+  deaths <- rpois(length(lambda), lambda)
+  
+  return(deaths)
+}
+
+# Simulate number of deaths
+deaths <- simulate_deaths(age, smoking_rate, pollution_level, access_to_healthcare)
+
+# Summary of simulated deaths
+summary(deaths)
+
+# Create a tibble with simulated predictor variables and death data
+simulated_data <- tibble(
+  index = 1:n_samples,
+  hospital = sample(1:5, n_samples, replace = TRUE), # Randomly assign hospitals
+  age = age,
+  smoking_rate = smoking_rate,
+  pollution_level = pollution_level,
+  access_to_healthcare = access_to_healthcare,
+  deaths = deaths
+)
+
+# Print the first few rows of the simulated data
+print(simulated_data)
+
+#### Tests for simulated data ####
+# 1. Check for Missing Values
+missing_values <- anyNA(simulated_data)
+print(paste("Test 1 - Missing Values:", ifelse(missing_values, "Fail", "Pass")))
+
+# 2. Numeric Check
+all_numeric <- all(sapply(simulated_data, is.numeric))
+print(paste("Test 2 - Numeric Check:", ifelse(all_numeric, "Pass", "Fail")))
+
+# 3. Smoking Rate Range
+smoking_rate_out_of_range <- any(simulated_data$smoking_rate < 0 | simulated_data$smoking_rate > 1)
+print(paste("Test 3 - Smoking Rate Range:", ifelse(smoking_rate_out_of_range, "Fail", "Pass")))
+
+# 4. Pollution Level Range
+pollution_level_out_of_range <- any(simulated_data$pollution_level < 0 | simulated_data$pollution_level > 100)
+print(paste("Test 4 - Pollution Level Range:", ifelse(pollution_level_out_of_range, "Fail", "Pass")))
+
+# 5. Access to Healthcare Range
+access_to_healthcare_out_of_range <- any(simulated_data$access_to_healthcare < 0 | simulated_data$access_to_healthcare > 1)
+print(paste("Test 5 - Access to Healthcare Range:", ifelse(access_to_healthcare_out_of_range, "Fail", "Pass")))
+
+# 6. Deaths Range
+deaths_out_of_range <- any(deaths < 0 | deaths > 200)
+print(paste("Test 6 - Deaths Range:", ifelse(deaths_out_of_range, "Fail", "Pass")))
+
+# 7. Hospital Number
+hospital_numbers <- unique(simulated_data$hospital)
+hospital_number_out_of_range <- any(hospital_numbers < 1 | hospital_numbers > 5)
+print(paste("Test 7 - Hospital Number:", ifelse(hospital_number_out_of_range, "Fail", "Pass")))
+
+# 8. Consistency Check
+sample_size <- nrow(simulated_data)
+expected_sample_size <- 1000
+consistency_check <- sample_size == expected_sample_size
+print(paste("Test 8 - Consistency Check:", ifelse(consistency_check, "Pass", "Fail")))
+
+# 9. Age Integer Check
+age_integer_check <- all.equal(simulated_data$age, as.integer(simulated_data$age))
+print(paste("Test 9 - Age Integer Check:", ifelse(isTRUE(age_integer_check), "Pass", "Fail")))
+
+# 10. Unique Index
+index_unique <- length(unique(simulated_data$index)) == nrow(simulated_data) && all(diff(simulated_data$index) == 1)
+print(paste("Test 10 - Unique Index:", ifelse(index_unique, "Pass", "Fail")))
+```
+
+```{r}
+####Question 4 ####
+# Plotting the simulated data
+simulated_data <- simulated_data %>%
+  mutate(deaths = deaths)
+
+# Scatter plot of age vs. number of deaths
+ggplot(simulated_data, aes(x = age, y = deaths)) +
+  geom_point() +  # Add points for each observation
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = FALSE) +  # Add a best fit line
+  labs(title = "Simulated Cancer Deaths by Age",
+       x = "Age",
+       y = "Number of Deaths")  # Add labels for the axes and title
+
+# Create the ggplot graph
+ggplot(simulated_data, aes(x = smoking_rate, y = deaths)) +
+  geom_point() +  # Add points for each observation
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = FALSE) +  # Add a best fit line
+  labs(title = "Simulated Cancer Deaths by Smoking Rate",
+       x = "Smoking Rate",
+       y = "Number of Deaths")  # Add labels for the axes and title
+
+# Create the ggplot graph
+ggplot(simulated_data, aes(x = pollution_level, y = deaths)) +
+  geom_point() +  # Add points for each observation
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = FALSE) +  # Add a best fit line
+  labs(title = "Simulated Cancer Deaths by Pollution Level",
+       x = "pollution Level",
+       y = "Number of Deaths")  # Add labels for the axes and title
+
+# Create the ggplot graph
+ggplot(simulated_data, aes(x = access_to_healthcare, y = deaths)) +
+  geom_point() +  # Add points for each observation
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = FALSE) +  # Add a best fit line
+  labs(title = "Simulated Cancer Deaths by Access to Healthcare",
+       x = "Access to Healthcare",
+       y = "Number of Deaths")  # Add labels for the axes and title
+
+# Build the model using rstanarm
+model <- stan_glm(deaths ~ age + smoking_rate + pollution_level + access_to_healthcare, 
+                  data = simulated_data, family = poisson())
+summary(model)
+```
