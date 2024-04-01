@@ -1,0 +1,141 @@
+---
+title: "sta302_week12_b"
+format: html
+author: Yiyi Feng
+---
+```{r}
+####Workspace setup####
+library(tidyverse)
+library(ggplot2)
+library(car)
+library(tibble)
+library(rstanarm)
+library(gridExtra)
+```
+
+```{r}
+#### Question 2 ####
+
+# Set seed for reproducibility
+set.seed(1)
+
+# Simulate sample size
+n <- 1000
+
+# Simulate predictor variables
+age_group <- sample(c("18-29", "30-44", "45-64", "65+"), n, replace = TRUE)
+gender <- sample(c("Male", "Female"), n, replace = TRUE)
+income_group <- sample(c("Low", "Medium", "High"), n, replace = TRUE)
+education <- sample(c("High School", "Bachelor's", "Master's", "PhD"), n, replace = TRUE)
+
+# Simulate support for political party
+# Define probabilities based on predictor variables
+# Adjust probabilities based on age-group, gender, income group, and education
+probabilities <- ifelse(age_group == "18-29", 0.3,
+                        ifelse(age_group == "30-44", 0.4,
+                               ifelse(age_group == "45-64", 0.5, 0.6))) +
+                  ifelse(gender == "Female", 0.1, 0) +
+                  ifelse(income_group == "High", 0.1,
+                         ifelse(income_group == "Medium", 0.05, 0)) +
+                  ifelse(education == "PhD", 0.1,
+                         ifelse(education == "Master's", 0.05, 0))
+
+# Simulate support for political party based on probabilities
+support <- rbinom(n, 1, probabilities)
+
+# Create a tibble with simulated data
+simulated_data <- tibble(
+  age_group = age_group,
+  gender = gender,
+  income_group = income_group,
+  education = education,
+  support_party = support
+)
+
+# Display the first few rows of the simulated data
+simulated_data
+
+#### Tests for simulated data ####
+# Test 1: Check for missing values in support_party
+test_1 <- sum(is.na(simulated_data$support_party)) == 0
+
+# Test 2: Verify age_group categories
+test_2 <- all(simulated_data$age_group %in% c('18-29', '30-44', '45-64', '65+'))
+
+# Test 3: Ensure gender categories
+test_3 <- all(simulated_data$gender %in% c('Male', 'Female'))
+
+# Test 4: Confirm income_group categories
+test_4 <- all(simulated_data$income_group %in% c('Low', 'Medium', 'High'))
+
+# Test 5: Check education categories
+test_5 <- all(simulated_data$education %in% c('High School', "Bachelor's", "Master's", 'PhD'))
+
+# Test 6: Verify support_party values
+test_6 <- all(simulated_data$support_party %in% c(0, 1))
+
+# Test 7: Check number of unique values in age_group
+test_7 <- length(unique(simulated_data$age_group)) == 4
+
+# Test 8: Confirm number of unique values in gender
+test_8 <- length(unique(simulated_data$gender)) == 2
+
+# Test 9: Ensure number of unique values in income_group
+test_9 <- length(unique(simulated_data$income_group)) == 3
+
+# Test 10: Check number of unique values in education
+test_10 <- length(unique(simulated_data$education)) == 4
+
+# Test 11: Confirm column names
+expected_col_names <- c("age_group", "gender", "income_group", "education", "support_party")
+test_11 <- all(colnames(simulated_data) == expected_col_names)
+
+# Combine test results
+test_results <- c(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, test_11)
+
+# Print test results
+print(test_results)
+
+```
+
+```{r}
+####Question 4 ####
+# Convert variables to factors
+simulated_data$age_group <- factor(simulated_data$age_group)
+simulated_data$gender <- factor(simulated_data$gender)
+simulated_data$income_group <- factor(simulated_data$income_group)
+simulated_data$education <- factor(simulated_data$education)
+
+# Plot for age group
+age_plot <- ggplot(simulated_data, aes(x = age_group, fill = age_group)) +
+  geom_bar() +
+  labs(title = "Support Party by Age Group")
+
+# Plot for gender
+gender_plot <- ggplot(simulated_data, aes(x = gender, fill = gender)) +
+  geom_bar() +
+  labs(title = "Support Party by Gender")
+
+# Plot for income group
+income_plot <- ggplot(simulated_data, aes(x = income_group, fill = income_group)) +
+  geom_bar() +
+  labs(title = "Support Party by Income Group")
+
+# Plot for education
+education_plot <- ggplot(simulated_data, aes(x = education, fill = education)) +
+  geom_bar() +
+  labs(title = "Support Party by Education")
+
+# Arrange plots in a grid
+grid.arrange(age_plot, gender_plot, income_plot, education_plot, ncol = 2)
+
+
+# Build logistic regression model with rstanarm
+logit_model <- stan_glm(support_party ~ age_group + gender + income_group + education,
+                        data = simulated_data, family = binomial(link = "logit"))
+
+# Summarize the model
+summary(logit_model)
+```
+
+
